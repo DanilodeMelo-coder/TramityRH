@@ -10,5 +10,6 @@ export const styles = StyleSheet.create({
   input: {color: '#fff', borderColor: '#4a5aa8', borderWidth: 1, borderRadius: 999, paddingVertical: 14, paddingHorizontal: 20},
   botao: {backgroundColor: '#f5f6fb', borderRadius: 999, paddingVertical: 16, alignItems: 'center', marginTop: 20},
   botaoTexto: {color: '#1a1f3d', fontWeight: 'bold'},
-  linkVoltar: {color: '#6cb0ff', fontWeight: 'bold', fontSize: 13, textAlign: 'center', marginTop: 16}
+  linkVoltar: {color: '#6cb0ff', fontWeight: 'bold', fontSize: 13, textAlign: 'center', marginTop: 16},
+  mensagem: {color: '#c5c9e0', fontSize: 13, textAlign: 'center', marginTop: 16}
 })
