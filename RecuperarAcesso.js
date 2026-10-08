@@ -1,0 +1,37 @@
+import {useState} from 'react'
+import {View, Text, TextInput, Pressable} from 'react-native'
+import {styles} from './Styles'
+
+
+export default function RecuperarAcesso({voltarParaLogin}){
+
+    const[contato, setContato] = useState('')
+    const[enviado, setEnviado] = useState(false)
+
+  return(
+    <View style={styles.fundo}>
+      <View style={styles.card}>
+        <Text style={styles.marca}>docRH</Text>
+        <Text style={styles.titulo}>Recuperar acesso</Text>
+        <Text style={styles.subTitulo}>Informe seus dados para recuperar sua conta</Text>
+        <Text style={styles.label}>Digite seu email</Text>
+        <TextInput 
+          style={styles.input}
+          value={contato}
+          onChangeText={setContato}
+          placeholder='Digite seu email'
+          placeholderTextColor= "#8a90b5"
+        />
+        <Pressable style={styles.botao} onPress={()=> setEnviado(true)}>
+        <Text style={styles.botaoTexto}>Continuar</Text>
+        </Pressable>
+        {enviado && <Text style={styles.mensagem}> Enviamos um codigo de verifição para o email </Text>}
+
+        <Pressable onPress={voltarParaLogin}>
+          <Text style={styles.linkVoltar}>Voltar</Text>
+        </Pressable>  
+
+      </View>
+    </View>
+  ) 
+}
