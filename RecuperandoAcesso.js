@@ -6,6 +6,7 @@ import {styles} from './Styles'
 export default function RecuperarAcesso(){
 
     const[contato, setContato] = useState('')
+    const[enviado, setEnviado] = useState(false)
 
   return(
     <View style={styles.fundo}>
@@ -21,9 +22,10 @@ export default function RecuperarAcesso(){
           placeholder='Digite seu email'
           placeholderTextColor= "#8a90b5"
         />
-        <Pressable style={styles.botao} onPress={()=> console.log('Enviamos um email para',contato )}>
+        <Pressable style={styles.botao} onPress={()=> setEnviado(True)}>
         <Text style={styles.botaoTexto}>Continuar</Text>
         </Pressable>
+        {enviado && <Text style={styles.mensagem}> Enviamos um codigo de verifição para o email </Text>}
 
         <Pressable onPress={()=> console.log('Voltar')}>
           <Text style={styles.linkVoltar}>Voltar</Text>
