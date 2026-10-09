@@ -1,6 +1,7 @@
 import {useState} from 'react'
 import {View, Text, TextInput, Pressable, Alert} from 'react-native'
 import {styles} from './Styles'
+import Logo from './Logo'
 
 
 export default function TelaLogin({irParaRecuperar}){
@@ -24,7 +25,7 @@ export default function TelaLogin({irParaRecuperar}){
   return(
     <View style={styles.fundo}>
       <View style={styles.card}>
-      <Text style={styles.marca}>Tramity</Text>
+      <Logo />
 
         <View style={styles.bloco}>
           <Text style={styles.blocoTitulo}>Entre para acompanhar <Text style={styles.destaque}> seu processo </Text></Text>

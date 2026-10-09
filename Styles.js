@@ -36,5 +36,10 @@ export const styles = StyleSheet.create({
   linkEsqueci: {color: '#0b4f38', fontWeight: '500', fontSize: 14, textAlign: 'right'},
   rodape: {alignItems: 'center', marginTop: 24},
   rodapeTexto: {color: '#55605a', fontSize: 14, marginBottom: 4},
-  rodapeLink: {color: '#0b4f38', fontWeight: '500', fontSize: 14}
+  rodapeLink: {color: '#0b4f38', fontWeight: '500', fontSize: 14},
+
+  //LOgo
+  logo: {flexDirection: 'row', alignItems: 'center', marginBottom: 24},
+  logoImagem: {width: 26, height: 30, marginRight: 8},
+  logoNome: {color: '#10231c', fontWeight: '700', fontSize: 20}
 })

@@ -1,6 +1,7 @@
 import {useState} from 'react'
 import {View, Text, TextInput, Pressable} from 'react-native'
 import {styles} from './Styles'
+import Logo from './Logo'
 
 
 
@@ -12,7 +13,7 @@ export default function TelaCodigoVerificacao({voltarParaLogin}){
   return(
     <View style={styles.fundo}>
       <View style={styles.card}>
-        <Text style={styles.marca}>Tramity</Text>
+        <Logo />
 
         <View style={styles.bloco}>
           <Text style={styles.blocoTitulo}>Digite o <Text style={styles.destaque}> código </Text> que enviamos</Text>
