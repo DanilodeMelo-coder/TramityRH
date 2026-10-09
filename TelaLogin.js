@@ -24,9 +24,12 @@ export default function TelaLogin({irParaRecuperar}){
   return(
     <View style={styles.fundo}>
       <View style={styles.card}>
-        <Text style={styles.marca}>docRH</Text>
-        <Text style={styles.titulo}>Bem-vindo de volta</Text>
-        <Text style={styles.subTitulo}>Acesse sua conta para continuar</Text>
+      <Text style={styles.marca}>Tramity</Text>
+
+        <View style={styles.bloco}>
+          <Text style={styles.blocoTitulo}>Entre para acompanhar <Text style={styles.destaque}> seu processo </Text></Text>
+          <Text style={styles.blocoSubTitulo}>Documentos e etapas em um só lugar</Text>
+        </View> 
 
         <View style={styles.campo}>
           <Text style={styles.label}>E-mail ou CPF</Text>
@@ -35,7 +38,7 @@ export default function TelaLogin({irParaRecuperar}){
             value={usuario}
             onChangeText={setUsuario}
             placeholder='Digite seu e-mail ou CPF'
-            placeholderTextColor="#8a90b5"
+            placeholderTextColor="#6b756f"
             autoCapitalize='none'
             keyboardType='email-address'
           />
@@ -49,7 +52,7 @@ export default function TelaLogin({irParaRecuperar}){
               value={senha}
               onChangeText={setSenha}
               placeholder='Digite sua senha'
-              placeholderTextColor="#8a90b5"
+              placeholderTextColor="#6b756f"
               secureTextEntry={!mostrarSenha}
             />
             <Pressable onPress={()=> setMostrarSenha(!mostrarSenha)}>

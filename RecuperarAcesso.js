@@ -11,16 +11,20 @@ export default function RecuperarAcesso({voltarParaLogin, avancarParaVerificacao
   return(
     <View style={styles.fundo}>
       <View style={styles.card}>
-        <Text style={styles.marca}>docRH</Text>
-        <Text style={styles.titulo}>Recuperar acesso</Text>
-        <Text style={styles.subTitulo}>Informe seus dados para recuperar sua conta</Text>
+        <Text style={styles.marca}>Tramity</Text>
+
+        <View style={styles.bloco}>
+          <Text style={styles.blocoTitulo}>Vamos recuperar seu <Text style={styles.destaque}>seu acesso </Text></Text>
+          <Text style={styles.blocoSubTitulo}>Informe seus dados para recuperar sua conta</Text>
+        </View>
+
         <Text style={styles.label}>Digite seu email</Text>
         <TextInput 
           style={styles.input}
           value={contato}
           onChangeText={setContato}
           placeholder='Digite seu email'
-          placeholderTextColor= "#8a90b5"
+          placeholderTextColor= "#6b756f"
         />
         <Pressable style={styles.botao} onPress={avancarParaVerificacao}>
         <Text style={styles.botaoTexto}>Continuar</Text>

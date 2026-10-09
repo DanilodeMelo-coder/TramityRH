@@ -12,9 +12,13 @@ export default function TelaCodigoVerificacao({voltarParaLogin}){
   return(
     <View style={styles.fundo}>
       <View style={styles.card}>
-        <Text style={styles.marca}>docRH</Text>
-        <Text style={styles.titulo}>Código de verificação</Text>
-        <Text style={styles.subTitulo}>Digite o código enviado para seu email cadastrado</Text>
+        <Text style={styles.marca}>Tramity</Text>
+
+        <View style={styles.bloco}>
+          <Text style={styles.blocoTitulo}>Digite o <Text style={styles.destaque}> código </Text> que enviamos</Text>
+          <Text style={styles.blocoSubTitulo}>Código de 6 dígitos enviados para o contato cadastrado</Text>   
+        </View>
+
         <Text style={styles.label}>Digite o código de 6 dígitos</Text>
 
         <TextInput
