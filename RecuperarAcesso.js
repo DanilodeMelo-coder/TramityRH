@@ -3,7 +3,7 @@ import {View, Text, TextInput, Pressable} from 'react-native'
 import {styles} from './Styles'
 
 
-export default function RecuperarAcesso({voltarParaLogin}){
+export default function RecuperarAcesso({voltarParaLogin, avancarParaVerificacao}){
 
     const[contato, setContato] = useState('')
     const[enviado, setEnviado] = useState(false)
@@ -22,7 +22,7 @@ export default function RecuperarAcesso({voltarParaLogin}){
           placeholder='Digite seu email'
           placeholderTextColor= "#8a90b5"
         />
-        <Pressable style={styles.botao} onPress={()=> setEnviado(true)}>
+        <Pressable style={styles.botao} onPress={avancarParaVerificacao}>
         <Text style={styles.botaoTexto}>Continuar</Text>
         </Pressable>
         {enviado && <Text style={styles.mensagem}> Enviamos um codigo de verifição para o email </Text>}

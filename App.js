@@ -1,6 +1,7 @@
 import RecuperarAcesso from './RecuperarAcesso'
 import TelaLogin from './TelaLogin'
-import {useState} from 'react'
+import TelaCodigoVerificacao from './TelaCodigoVerificacao'
+import {useState} from 'react' 
 
 export default function App(){
   const[tela, setTela] = useState('login')
@@ -8,5 +9,13 @@ export default function App(){
   if(tela === 'login'){
     return <TelaLogin irParaRecuperar={() => setTela('recuperar')} />
   }
-  return <RecuperarAcesso voltarParaLogin={()=> setTela('login')}/>
+  if(tela === 'verificacao'){
+    return <TelaCodigoVerificacao voltarParaLogin={() => setTela('login')} />
+  }
+  return <RecuperarAcesso voltarParaLogin={()=> setTela('login')}
+          RecuperarAcesso avancarParaVerificacao={()=> setTela('verificacao')}
+  />
+
+  
 }
+
