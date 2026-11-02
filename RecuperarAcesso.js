@@ -15,7 +15,7 @@ export default function RecuperarAcesso({voltarParaLogin, avancarParaVerificacao
         <Logo />
 
         <View style={styles.bloco}>
-          <Text style={styles.blocoTitulo}>Vamos recuperar seu <Text style={styles.destaque}>seu acesso </Text></Text>
+          <Text style={styles.blocoTitulo}>Vamos recuperar <Text style={styles.destaque}> seu acesso </Text></Text>
           <Text style={styles.blocoSubTitulo}>Informe seus dados para recuperar sua conta</Text>
         </View>
 
@@ -30,7 +30,7 @@ export default function RecuperarAcesso({voltarParaLogin, avancarParaVerificacao
         <Pressable style={styles.botao} onPress={avancarParaVerificacao}>
         <Text style={styles.botaoTexto}>Continuar</Text>
         </Pressable>
-        {enviado && <Text style={styles.mensagem}> Enviamos um codigo de verifição para o email </Text>}
+        {enviado && <Text style={styles.mensagem}> Enviamos um código de verificação para o email </Text>}
 
         <Pressable onPress={voltarParaLogin}>
           <Text style={styles.linkVoltar}>Voltar</Text>

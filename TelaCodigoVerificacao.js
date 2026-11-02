@@ -4,8 +4,6 @@ import {styles} from './Styles'
 import Logo from './Logo'
 
 
-
-
 export default function TelaCodigoVerificacao({voltarParaLogin}){
 
   const [codigo, setCodigo] = useState('')
@@ -29,7 +27,6 @@ export default function TelaCodigoVerificacao({voltarParaLogin}){
           keyboardType='number-pad'
           maxLength={6}
         />
-        
 
         <Pressable style={styles.botao} onPress={()=> console.log(codigo)}>
         <Text style={styles.botaoTexto}>Continuar</Text>
@@ -45,12 +42,7 @@ export default function TelaCodigoVerificacao({voltarParaLogin}){
           <Text style={styles.linkVoltar}>Voltar</Text>
         </Pressable> 
 
-       
-
       </View>
     </View>
-
-
-
   )
 }

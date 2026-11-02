@@ -4,7 +4,7 @@ import {styles} from './Styles'
 import Logo from './Logo'
 
 
-export default function TelaLogin({irParaRecuperar}){
+export default function TelaLogin({irParaRecuperar, irParaCadastro}){
 
     const[usuario, setUsuario] = useState('')
     const[senha, setSenha] = useState('')
@@ -70,10 +70,10 @@ export default function TelaLogin({irParaRecuperar}){
           <Text style={styles.botaoTexto}>ENTRAR</Text>
         </Pressable>
 
-        <View style={styles.rodape}>
-          <Text style={styles.rodapeTexto}>Ainda não possui acesso?</Text>
-          <Pressable onPress={()=> console.log('Fale com o RH')}>
-            <Text style={styles.rodapeLink}>Fale com o RH</Text>
+        <View style={styles.rodapeConvite}>
+          <Text style={styles.rodapeTexto}>Recebeu um convite?</Text>
+          <Pressable onPress={irParaCadastro}>
+            <Text style={styles.rodapeLink}>Criar conta</Text>
           </Pressable>
         </View>
 
