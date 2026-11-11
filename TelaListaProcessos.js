@@ -1,32 +1,33 @@
-import {useState, useEffect} from 'react'
-import {View, Text, Pressable, ScrollView, ActivityIndicator} from 'react-native'
-import {styles} from './Styles'
+import { useState, useEffect } from 'react'
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native'
+import { styles } from './Styles'
 import Logo from './Logo'
-import {listarProcessos} from './processo'
+import { listarProcessos } from './processo'
 
-const NOME_TIPO = {ADMISSAO: 'Admissão', DEMISSAO: 'Demissão'}
+const NOME_TIPO = { ADMISSAO: 'Admissão', DEMISSAO: 'Demissão' }
 
 // '2026-10-20' vira '20/10/2026'
-function formatarData(iso){
+function formatarData(iso) {
+  if (!iso) return ''
   return iso.slice(0, 10).split('-').reverse().join('/')
 }
 
-export default function TelaListaProcessos({irParaDetalhe, irParaNovoProcesso}){
+export default function TelaListaProcessos({ irParaDetalhe, irParaNovoProcesso }) {
 
   const [processos, setProcessos] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
   const [filtro, setFiltro] = useState('andamento') // 'andamento' | 'concluidos' | 'todos'
 
-  async function carregar(){
+  async function carregar() {
     setCarregando(true)
     setErro('')
-    try{
+    try {
       const dados = await listarProcessos()
       setProcessos(dados)
-    }catch(e){
+    } catch (e) {
       setErro('Não foi possível carregar os processos.')
-    }finally{
+    } finally {
       setCarregando(false)
     }
   }
@@ -37,20 +38,20 @@ export default function TelaListaProcessos({irParaDetalhe, irParaNovoProcesso}){
   }, [])
 
   const emAndamento = processos.filter(p => !p.dataConclusao)
-  const totalAnalise = emAndamento.reduce((soma, p) => soma + p.aguardandoAnalise, 0)
+  const totalAnalise = emAndamento.reduce((soma, p) => soma + (p.aguardandoAnalise || 0), 0)
 
   // Quem tem mais documentos esperando análise aparece primeiro
   const visiveis = processos
     .filter(p => {
-      if(filtro === 'andamento') return !p.dataConclusao
-      if(filtro === 'concluidos') return !!p.dataConclusao
+      if (filtro === 'andamento') return !p.dataConclusao
+      if (filtro === 'concluidos') return !!p.dataConclusao
       return true
     })
-    .sort((a, b) => b.aguardandoAnalise - a.aguardandoAnalise)
+    .sort((a, b) => (b.aguardandoAnalise || 0) - (a.aguardandoAnalise || 0))
 
   const carregado = !carregando && erro === ''
 
-  return(
+  return (
     <ScrollView style={styles.fundoTela} contentContainerStyle={styles.scrollConteudo}>
       <Logo />
 
@@ -122,16 +123,16 @@ export default function TelaListaProcessos({irParaDetalhe, irParaNovoProcesso}){
           </View>
 
           <View style={styles.progressoCard}>
-            {Array.from({length: p.total}).map((_, i) => (
-              <View key={i} style={[styles.segmentoCard, i < p.aprovados && styles.segmentoCardCheio]} />
+            {Array.from({ length: p.total || 0 }).map((_, i) => (
+              <View key={i} style={[styles.segmentoCard, i < (p.aprovados || 0) && styles.segmentoCardCheio]} />
             ))}
           </View>
 
           <View style={styles.processoRodape}>
-            <Text style={styles.itemSub}>{p.aprovados} de {p.total} aprovados</Text>
+            <Text style={styles.itemSub}>{p.aprovados || 0} de {p.total || 0} aprovados</Text>
             {p.dataConclusao ? (
               <Text style={styles.itemSub}>Concluído em {formatarData(p.dataConclusao)}</Text>
-            ) : p.aguardandoAnalise > 0 ? (
+            ) : (p.aguardandoAnalise || 0) > 0 ? (
               <Text style={styles.itemAnalise}>{p.aguardandoAnalise} aguardando análise</Text>
             ) : (
               <Text style={styles.itemSub}>Criado em {formatarData(p.dataCriacao)}</Text>

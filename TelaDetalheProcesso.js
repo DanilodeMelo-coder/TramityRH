@@ -3,6 +3,7 @@ import {View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, Alert, 
 import {styles} from './Styles'
 import Logo from './Logo'
 import {buscarProcesso, avaliarDocumento} from './processo'
+import {CONFIG, obteerToken} from './config'
 
 const NOME_TIPO = {ADMISSAO: 'Admissão', DEMISSAO: 'Demissão'}
 
@@ -31,17 +32,28 @@ export default function TelaDetalheProcesso({resumo, voltar}){
     carregar()
   }, [])
 
-  // Função para visualizar/descarregar o documento enviado (Rota 11)
-  function visualizarArquivo(idUltimoEnvio, nomeDocumento) {
+  // Função real para visualizar/descarregar o documento enviado (Rota 11 conectada à API)
+  async function visualizarArquivo(idUltimoEnvio, nomeDocumento) {
     if (!idUltimoEnvio) {
       Alert.alert('Aviso', 'Nenhum arquivo enviado para este documento.')
       return
     }
-    // Na API real: abre a URL da Rota 11 -> GET /envios/{idUltimoEnvio}/arquivo
-    Alert.alert(
-      'Visualizar Documento',
-      `Abrindo o arquivo enviado para "${nomeDocumento}" (Envio ID: ${idUltimoEnvio}).`
-    )
+
+    try {
+      const token = await obteerToken()
+      // Monta a URL do endpoint de download/visualização do ficheiro na API do Railway
+      const urlArquivo = `${CONFIG.API_URL}/envios/${idUltimoEnvio}/arquivo`
+
+      // Abre o link diretamente no browser ou leitor de PDF do telemóvel, injetando o token se suportado ou abrindo a URL protegida
+      const suportado = await Linking.canOpenURL(urlArquivo)
+      if (suportado) {
+        await Linking.openURL(urlArquivo)
+      } else {
+        Alert.alert('Erro', 'Não foi possível abrir o link do arquivo.')
+      }
+    } catch (e) {
+      Alert.alert('Erro', 'Falha ao aceder ao documento.')
+    }
   }
 
   async function avaliar(idDocumento, resultado, motivoRecusa){

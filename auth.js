@@ -1,30 +1,61 @@
-// Parte do app que fala com as rotas /auth da API.
-// Por enquanto devolve dados simulados no mesmo formato da API.
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CONFIG, criarErroHttp } from './config';
 
-// Simula POST /auth/cadastro (rota 2)
-export async function cadastrarColaborador({nome, cpf, email, senha}) {
-  // Simula o tempo de rede
-  await new Promise(resolve => setTimeout(resolve, 1200))
+// Rota 1: POST /auth/login (Autenticação do utilizador)
+export async function realizarLogin(email, senha) {
+  try {
+    const resposta = await fetch(`${CONFIG.API_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, senha }),
+    });
 
-  // Para testar o erro 409 (e-mail ou CPF já existe)
-  if (email.toLowerCase() === 'existe@teste.com') {
-    const erro = new Error('conflito')
-    erro.status = 409
-    throw erro
+    if (!resposta.ok) {
+      throw criarErroHttp(resposta.status, 'E-mail ou senha incorretos.');
+    }
+
+    const dados = await resposta.json();
+
+    // O backend deve retornar o token e opcionalmente o perfil/nome
+    // Exemplo: { token: '...', perfil: 'RH' ou 'COLABORADOR', nome: '...' }
+    if (dados.token) {
+      await AsyncStorage.setItem('@token', dados.token);
+    }
+    if (dados.perfil) {
+      await AsyncStorage.setItem('@perfil', dados.perfil);
+    }
+    if (dados.nome) {
+      await AsyncStorage.setItem('@nome', dados.nome);
+    }
+
+    return dados;
+  } catch (erro) {
+    throw erro;
+  }
+}
+
+// Função para encerrar a sessão (Logout)
+export async function realizarLogout() {
+  await AsyncStorage.removeItem('@token');
+  await AsyncStorage.removeItem('@perfil');
+  await AsyncStorage.removeItem('@nome');
+}
+
+// Rota de Cadastro (caso aplicável no teu fluxo)
+export async function realizarCadastro(dadosUsuario) {
+  const resposta = await fetch(`${CONFIG.API_URL}/auth/cadastro`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(dadosUsuario),
+  });
+
+  if (!resposta.ok) {
+    throw criarErroHttp(resposta.status, 'Não foi possível realizar o cadastro.');
   }
 
-  return { id: 'colaborador-simulado-1', nome, email }
-
-  // Versão real (usar quando a API estiver no ar):
-  // const resposta = await fetch(`${API_URL}/auth/cadastro`, {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ nome, cpf, email, senha }),
-  // })
-  // if (!resposta.ok) {
-  //   const erro = new Error('falha no cadastro')
-  //   erro.status = resposta.status
-  //   throw erro
-  // }
-  // return resposta.json()
+  return resposta.json();
 }

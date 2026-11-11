@@ -1,25 +1,51 @@
-// Única parte do app que fala com a API.
-// Por enquanto devolve dados simulados no mesmo formato da API.
+import { CONFIG, obteerToken, criarErroHttp } from './config';
 
-// Simula POST /documentos/{id}/envios (rota 17)
+// Envia o ficheiro binário do documento (Rota 17 / Rota de envios)
 export async function enviarDocumento(idDocumento, arquivo) {
-  // Simula o tempo de rede
-  await new Promise(resolve => setTimeout(resolve, 1200))
+  const token = await obteerToken();
 
-  return { idEnvio: 'envio-simulado-1', status: 'EM_ANALISE' }
+  const formData = new FormData();
+  formData.append('arquivo', {
+    uri: arquivo.uri,
+    type: arquivo.mimeType || 'application/pdf',
+    name: arquivo.name || 'documento',
+  });
+
+  const resposta = await fetch(`${CONFIG.API_URL}/documentos/${idDocumento}/envios`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      // Nota: No React Native, o fetch define automaticamente o Content-Type multipart/form-data com o boundary do FormData.
+    },
+    body: formData,
+  });
+
+  if (!resposta.ok) {
+    throw criarErroHttp(resposta.status, 'Não foi possível enviar o documento.');
+  }
+
+  return resposta.json(); // Retorna o objeto de envio criado na API real
 }
 
-// Simula GET /processos/{id} (rota 9). Depois vem da API.
-export const processoSimulado = {
-  id: 'proc-1',
-  tipo: 'Admissão',
-  status: 'EM_ANDAMENTO',
-  documentos: [
-    {id: 'd1', nomeTipo: 'Comprovante de residência', direcao: 'COLABORADOR_ENVIA', status: 'RECUSADO', motivoRecusa: 'imagem ilegível'},
-    {id: 'd2', nomeTipo: 'Foto 3x4', direcao: 'COLABORADOR_ENVIA', status: 'PENDENTE', motivoRecusa: null},
-    {id: 'd3', nomeTipo: 'Título de eleitor', direcao: 'COLABORADOR_ENVIA', status: 'PENDENTE', motivoRecusa: null},
-    {id: 'd4', nomeTipo: 'Carteira de trabalho', direcao: 'COLABORADOR_ENVIA', status: 'EM_ANALISE', motivoRecusa: null},
-    {id: 'd5', nomeTipo: 'RG', direcao: 'COLABORADOR_ENVIA', status: 'APROVADO', motivoRecusa: null},
-    {id: 'd6', nomeTipo: 'CPF', direcao: 'COLABORADOR_ENVIA', status: 'APROVADO', motivoRecusa: null},
-  ],
+// Buscar detalhes do processo do colaborador autenticado ou específico
+export async function buscarProcessoColaborador(idProcesso) {
+  const token = await obteerToken();
+  
+  // Se o endpoint exigir um ID específico ou buscar o processo ativo do colaborador logado:
+  const url = idProcesso 
+    ? `${CONFIG.API_URL}/processos/${idProcesso}` 
+    : `${CONFIG.API_URL}/processos/meu-processo`;
+
+  const resposta = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!resposta.ok) {
+    throw criarErroHttp(resposta.status, 'Não foi possível carregar os detalhes do processo.');
+  }
+
+  return resposta.json();
 }

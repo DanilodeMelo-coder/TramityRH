@@ -1,31 +1,31 @@
-import {useState} from 'react'
-import {View, Text, Pressable, ActivityIndicator} from 'react-native'
+import { useState } from 'react'
+import { View, Text, Pressable, ActivityIndicator } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker'
-import {styles} from './Styles'
+import { styles } from './Styles'
 import Logo from './Logo'
-import {enviarDocumento} from './documentos'
+import { enviarDocumento } from './documentos'
 
-const TAMANHO_MAXIMO = 5 * 1024 * 1024 // 5 MB
+const TAMANHO_MAXIMO = 5 * 1024 * 1024 // 5 MB em bytes
 
 // documento: { id, nomeTipo, status, motivoRecusa } (formato da rota 9)
-export default function TelaEnviarDocumento({documento, voltar, aoEnviar}){
+export default function TelaEnviarDocumento({ documento, voltar, aoEnviar }) {
 
   const [arquivo, setArquivo] = useState(null)
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
   const [enviado, setEnviado] = useState(false)
 
-  async function escolherArquivo(){
+  async function escolherArquivo() {
     setErro('')
     const resultado = await DocumentPicker.getDocumentAsync({
       type: ['application/pdf', 'image/jpeg', 'image/png'],
       copyToCacheDirectory: true,
     })
 
-    if(resultado.canceled) return
+    if (resultado.canceled) return
 
     const escolhido = resultado.assets[0]
-    if(escolhido.size > TAMANHO_MAXIMO){
+    if (escolhido.size > TAMANHO_MAXIMO) {
       setArquivo(null)
       setErro('O arquivo passa de 5 MB. Escolha um menor.')
       return
@@ -33,22 +33,22 @@ export default function TelaEnviarDocumento({documento, voltar, aoEnviar}){
     setArquivo(escolhido)
   }
 
-  async function enviar(){
-    if(!arquivo) return
+  async function enviar() {
+    if (!arquivo) return
     setErro('')
     setEnviando(true)
-    try{
+    try {
       await enviarDocumento(documento.id, arquivo)
-      if(aoEnviar) aoEnviar(documento.id)
+      if (aoEnviar) aoEnviar(documento.id)
       setEnviado(true)
-    }catch(e){
+    } catch (e) {
       setErro('Não foi possível enviar. Tente de novo.')
-    }finally{
+    } finally {
       setEnviando(false)
     }
   }
 
-  return(
+  return (
     <View style={styles.fundo}>
       <Logo />
 

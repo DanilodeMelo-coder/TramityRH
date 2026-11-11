@@ -1,20 +1,21 @@
-import {useState, useEffect} from 'react'
-import {View, Text, TextInput, Pressable, ScrollView, ActivityIndicator} from 'react-native'
-import {styles} from './Styles'
+import { useState, useEffect } from 'react'
+import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator } from 'react-native'
+import { styles } from './Styles'
 import Logo from './Logo'
-import {listarTiposDocumento, criarProcesso, gerarConvite} from './processo'
+import { listarTiposDocumento, criarProcesso, gerarConvite } from './processo'
 
 const TIPOS = [
-  {valor: 'ADMISSAO', nome: 'Admissão'},
-  {valor: 'DEMISSAO', nome: 'Demissão'},
+  { valor: 'ADMISSAO', nome: 'Admissão' },
+  { valor: 'DEMISSAO', nome: 'Demissão' },
 ]
 
 // '2026-11-09' vira '09/11/2026'
-function formatarData(iso){
+function formatarData(iso) {
+  if (!iso) return ''
   return iso.slice(0, 10).split('-').reverse().join('/')
 }
 
-export default function TelaNovoProcesso({voltar}){
+export default function TelaNovoProcesso({ voltar }) {
 
   const [tipo, setTipo] = useState(null)
   const [catalogo, setCatalogo] = useState([])
@@ -27,14 +28,15 @@ export default function TelaNovoProcesso({voltar}){
   const [processoCriado, setProcessoCriado] = useState(null) // evita abrir o processo duas vezes
   const [convite, setConvite] = useState(null) // { codigo, expiraEm }
 
-  async function carregarCatalogo(){
+  async function carregarCatalogo() {
     setCarregando(true)
     setErroCatalogo('')
-    try{
-      setCatalogo(await listarTiposDocumento())
-    }catch(e){
+    try {
+      const dados = await listarTiposDocumento()
+      setCatalogo(dados)
+    } catch (e) {
       setErroCatalogo('Não foi possível carregar os documentos.')
-    }finally{
+    } finally {
       setCarregando(false)
     }
   }
@@ -43,33 +45,33 @@ export default function TelaNovoProcesso({voltar}){
     carregarCatalogo()
   }, [])
 
-  function alternar(id){
+  function alternar(id) {
     setSelecionados(atuais =>
       atuais.includes(id) ? atuais.filter(x => x !== id) : [...atuais, id]
     )
   }
 
-  async function abrirProcesso(){
-    if(!tipo){
+  async function abrirProcesso() {
+    if (!tipo) {
       setErro('Escolha o tipo do processo.')
       return
     }
-    if(selecionados.length === 0){
+    if (selecionados.length === 0) {
       setErro('Escolha pelo menos um documento.')
       return
     }
-    if(!email.trim() || !email.includes('@')){
-      setErro('Digite o e-mail do colaborador.')
+    if (!email.trim() || !email.includes('@')) {
+      setErro('Digite um e-mail válido para o colaborador.')
       return
     }
 
     setErro('')
     setEnviando(true)
 
-    // 1) Abre o processo (rota 8), a não ser que já tenha sido aberto numa tentativa anterior
+    // 1) Abre o processo, a não ser que já tenha sido aberto numa tentativa anterior
     let processo = processoCriado
-    if(!processo){
-      try{
+    if (!processo) {
+      try {
         processo = await criarProcesso({
           tipo,
           documentos: selecionados.map(id => ({
@@ -79,29 +81,29 @@ export default function TelaNovoProcesso({voltar}){
           })),
         })
         setProcessoCriado(processo)
-      }catch(e){
-        setErro('Não foi possível abrir o processo. Tente de novo.')
+      } catch (e) {
+        setErro('Não foi possível abrir o processo. Verifique a conexão.')
         setEnviando(false)
         return
       }
     }
 
-    // 2) Gera o convite (rota 10)
-    try{
+    // 2) Gera o convite
+    try {
       const resultado = await gerarConvite(processo.id, email.trim())
       setConvite(resultado)
-    }catch(e){
-      if(e.status === 409){
-        setErro('Este processo já tem um colaborador.')
-      }else{
-        setErro('O processo foi aberto, mas o convite não foi gerado. Toque em "Abrir processo" para tentar o convite de novo.')
+    } catch (e) {
+      if (e.status === 409) {
+        setErro('Este processo já tem um colaborador associado.')
+      } else {
+        setErro('O processo foi aberto, mas o convite não foi gerado. Toque em "Abrir processo" novamente.')
       }
-    }finally{
+    } finally {
       setEnviando(false)
     }
   }
 
-  return(
+  return (
     <ScrollView
       style={styles.fundoTela}
       contentContainerStyle={styles.scrollConteudo}
@@ -112,7 +114,7 @@ export default function TelaNovoProcesso({voltar}){
       {convite ? (
         <View>
           <View style={styles.bloco}>
-            <Text style={styles.blocoTitulo}>Processo <Text style={styles.destaque}> aberto </Text></Text>
+            <Text style={styles.blocoTitulo}>Processo <Text style={styles.destaque}>aberto</Text></Text>
             <Text style={styles.blocoSubTitulo}>Agora envie o código do convite ao colaborador</Text>
           </View>
 
@@ -132,7 +134,7 @@ export default function TelaNovoProcesso({voltar}){
       ) : (
         <View>
           <View style={styles.bloco}>
-            <Text style={styles.blocoTitulo}>Abra um <Text style={styles.destaque}> novo processo </Text></Text>
+            <Text style={styles.blocoTitulo}>Abra um <Text style={styles.destaque}>novo processo</Text></Text>
             <Text style={styles.blocoSubTitulo}>Escolha o tipo, os documentos e quem vai receber o convite</Text>
           </View>
 
@@ -174,7 +176,7 @@ export default function TelaNovoProcesso({voltar}){
             <View style={styles.listaCard}>
               {catalogo.map((t, i) => {
                 const marcado = selecionados.includes(t.id)
-                return(
+                return (
                   <Pressable
                     key={t.id}
                     style={[styles.item, i > 0 && styles.itemLinha]}

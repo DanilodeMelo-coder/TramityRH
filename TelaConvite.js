@@ -7,9 +7,10 @@ import {
   Alert, 
   ActivityIndicator 
 } from 'react-native';
-import { styles } from './Styles'; // Importa os estilos do ficheiro separado
+import { styles } from './Styles';
+import { validarConviteColaborador } from './auth'; // Importa a função real da API
 
-export default function TelaConvite({ navigation }) {
+export default function TelaConvite({ navigation, aoConcluirValidacao }) {
   const [codigo, setCodigo] = useState('');
   const [carregando, setCarregando] = useState(false);
 
@@ -23,16 +24,18 @@ export default function TelaConvite({ navigation }) {
     try {
       setCarregando(true);
       
-      // Exemplo de integração futura com o serviço:
-      // const token = await AsyncStorage.getItem('@token');
-      // const resultado = await aceitarConvite(codigo, token);
+      // Chamada real à API do Railway
+      const resultado = await validarConviteColaborador(codigo);
 
-      // Simulação de sucesso para teste
-      setTimeout(() => {
-        setCarregando(false);
-        Alert.alert('Sucesso', 'Convite aceito com sucesso!');
-        // navigation.navigate('HomeColaborador', { idProcesso: resultado.idProcesso });
-      }, 1000);
+      setCarregando(false);
+      Alert.alert('Sucesso', 'Convite aceito com sucesso!');
+
+      // Se utilizas navegação por props customizadas ou React Navigation
+      if (aoConcluirValidacao) {
+        aoConcluirValidacao(resultado.idProcesso);
+      } else if (navigation?.navigate) {
+        navigation.navigate('HomeColaborador', { idProcesso: resultado.idProcesso });
+      }
 
     } catch (error) {
       setCarregando(false);
