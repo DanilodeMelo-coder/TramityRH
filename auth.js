@@ -77,3 +77,44 @@ export async function aceitarConvite(codigo) {
   }
   return resposta.json(); // { idProcesso }
 }
+
+// Rota 3: POST /auth/recuperar-senha (gera o código; a resposta é sempre neutra)
+export async function solicitarRecuperacao(email) {
+  const resposta = await fetch(`${CONFIG.API_URL}/auth/recuperar-senha`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!resposta.ok) {
+    throw await erroDaResposta(resposta, 'Não foi possível enviar o código.');
+  }
+  return resposta.json(); // { mensagem }
+}
+
+// Rota 4: POST /auth/validar-codigo (devolve o token para trocar a senha)
+export async function validarCodigoRecuperacao(email, codigo) {
+  const resposta = await fetch(`${CONFIG.API_URL}/auth/validar-codigo`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, codigo }),
+  });
+
+  if (!resposta.ok) {
+    throw await erroDaResposta(resposta, 'Código inválido ou expirado.');
+  }
+  return resposta.json(); // { tokenRedefinicao }
+}
+
+// Rota 5: POST /auth/nova-senha (responde 204, sem corpo)
+export async function redefinirSenha(tokenRedefinicao, novaSenha) {
+  const resposta = await fetch(`${CONFIG.API_URL}/auth/nova-senha`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tokenRedefinicao, novaSenha }),
+  });
+
+  if (!resposta.ok) {
+    throw await erroDaResposta(resposta, 'Não foi possível trocar a senha.');
+  }
+}

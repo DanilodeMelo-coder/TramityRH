@@ -8,6 +8,7 @@ import TelaListaProcessos from './TelaListaProcessos'
 import TelaDetalheProcesso from './TelaDetalheProcesso'
 import TelaNovoProcesso from './TelaNovoProcesso'
 import TelaConvite from './TelaConvite'
+import TelaNovaSenha from './TelaNovaSenha'
 import { realizarLogout } from './auth'
 import { useState } from 'react'
 
@@ -15,6 +16,9 @@ export default function App(){
   const [tela, setTela] = useState('login')
   const [documentoAtual, setDocumentoAtual] = useState(null)
   const [resumoAtual, setResumoAtual] = useState(null)
+  const [emailRecuperacao, setEmailRecuperacao] = useState('')
+  const [tokenRedefinicao, setTokenRedefinicao] = useState(null)
+  
 
   async function sair(){
     await realizarLogout()
@@ -31,9 +35,24 @@ export default function App(){
   if(tela === 'cadastro'){
     return <TelaCadastro voltarParaLogin={() => setTela('login')} />
   }
-  if(tela === 'verificacao'){
-    return <TelaCodigoVerificacao voltarParaLogin={() => setTela('login')} />
+    if(tela === 'verificacao'){
+    return <TelaCodigoVerificacao
+      email={emailRecuperacao}
+      voltarParaLogin={() => setTela('login')}
+      avancarParaNovaSenha={(token) => {
+        setTokenRedefinicao(token)
+        setTela('novaSenha')
+      }}
+    />
   }
+
+    if(tela === 'novaSenha'){
+    return <TelaNovaSenha
+      tokenRedefinicao={tokenRedefinicao}
+      irParaLogin={() => setTela('login')}
+    />
+  }
+  
   if(tela === 'convite'){
     return <TelaConvite
       voltar={sair}
@@ -63,6 +82,7 @@ export default function App(){
         setTela('detalheProcesso')
       }}
       irParaNovoProcesso={() => setTela('novoProcesso')}
+      sair={sair}
     />
   }
   if(tela === 'detalheProcesso'){
@@ -74,8 +94,11 @@ export default function App(){
   if(tela === 'novoProcesso'){
     return <TelaNovoProcesso voltar={() => setTela('processosRH')} />
   }
-  return <RecuperarAcesso
+    return <RecuperarAcesso
     voltarParaLogin={() => setTela('login')}
-    avancarParaVerificacao={() => setTela('verificacao')}
+    avancarParaVerificacao={(email) => {
+      setEmailRecuperacao(email)
+      setTela('verificacao')
+    }}
   />
 }

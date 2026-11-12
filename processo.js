@@ -1,4 +1,5 @@
-import { CONFIG, obteerToken, criarErroHttp } from './config';
+import { CONFIG, obteerToken, criarErroHttp, erroDaResposta } from './config';
+import { Platform } from 'react-native';
 
 // Rota 6: GET /tipos-documento (Catálogo global de tipos de documento)
 export async function listarTiposDocumento() {
@@ -143,6 +144,36 @@ export async function concluirProcesso(idProcesso, confirmarPendencias) {
 
   if (!resposta.ok) {
     throw await erroDaResposta(resposta, 'Não foi possível concluir o processo.');
+  }
+  return resposta.json();
+}
+
+// Rota 13: POST /processos/{idProcesso}/documentos/{idDocumento}/arquivo-empresa (RH envia o arquivo da demissão)
+export async function enviarArquivoEmpresa(idProcesso, idDocumento, arquivo) {
+  const token = await obteerToken();
+
+  const formData = new FormData();
+  if (Platform.OS === 'web') {
+    formData.append('arquivo', arquivo.file);
+  } else {
+    formData.append('arquivo', {
+      uri: arquivo.uri,
+      type: arquivo.mimeType || 'application/pdf',
+      name: arquivo.name || 'documento',
+    });
+  }
+
+  const resposta = await fetch(
+    `${CONFIG.API_URL}/processos/${idProcesso}/documentos/${idDocumento}/arquivo-empresa`,
+    {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }, // sem Content-Type: o fetch monta sozinho
+      body: formData,
+    }
+  );
+
+  if (!resposta.ok) {
+    throw await erroDaResposta(resposta, 'Não foi possível enviar o arquivo.');
   }
   return resposta.json();
 }

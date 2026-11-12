@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native'
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Platform } from 'react-native'
 import { styles } from './Styles'
 import Logo from './Logo'
-import { listarMeusProcessos, buscarProcessoColaborador } from './documentos'
+import { listarMeusProcessos, buscarProcessoColaborador, darAceite  } from './documentos'
+import { baixarArquivoEnvio } from './processo'
 
 const NOME_TIPO = { ADMISSAO: 'Admissão', DEMISSAO: 'Demissão' }
 
@@ -11,6 +12,8 @@ export default function TelaInicio({ irParaEnviar, irParaConvite, sair }) {
   const [empresa, setEmpresa] = useState('')
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
+  const [aceitandoId, setAceitandoId] = useState(null)
+  const [erroAceite, setErroAceite] = useState('')
 
   async function carregar() {
     setCarregando(true)
@@ -33,6 +36,35 @@ export default function TelaInicio({ irParaEnviar, irParaConvite, sair }) {
       setCarregando(false)
     }
   }
+
+  async function verArquivo(idUltimoEnvio) {
+  setErroAceite('')
+  if (Platform.OS !== 'web') {
+    setErroAceite('Por enquanto, os arquivos só abrem na versão web.')
+    return
+  }
+  const janela = window.open('', '_blank')
+  try {
+    const arquivo = await baixarArquivoEnvio(idUltimoEnvio)
+    janela.location.href = URL.createObjectURL(arquivo)
+  } catch (e) {
+    janela.close()
+    setErroAceite('Não foi possível abrir o arquivo.')
+  }
+}
+
+async function aceitar(idDocumento) {
+  setErroAceite('')
+  setAceitandoId(idDocumento)
+  try {
+    await darAceite(processo.id, idDocumento)
+    setProcesso(await buscarProcessoColaborador(processo.id))
+  } catch (e) {
+    setErroAceite(e.message || 'Não foi possível registrar o aceite.')
+  } finally {
+    setAceitandoId(null)
+  }
+}
 
   useEffect(() => {
     carregar()
@@ -62,10 +94,35 @@ export default function TelaInicio({ irParaEnviar, irParaConvite, sair }) {
     )
   }
 
+    if (processo && processo.status === 'CONCLUIDO') {
+    return (
+      <ScrollView style={styles.fundoTela} contentContainerStyle={styles.scrollConteudo}>
+        <Logo />
+        <View style={styles.bloco}>
+          <Text style={styles.blocoTitulo}>
+            Processo <Text style={styles.destaque}>concluído</Text>
+          </Text>
+          <Text style={styles.blocoSubTitulo}>
+            Sua {NOME_TIPO[processo.tipo]} com {empresa} foi finalizada pelo RH. Não há mais nada para fazer aqui.
+          </Text>
+        </View>
+
+        <Pressable style={styles.botao} onPress={irParaConvite}>
+          <Text style={styles.botaoTexto}>Tenho um novo código de convite</Text>
+        </Pressable>
+
+        <Pressable onPress={sair}>
+          <Text style={styles.linkVoltar}>Sair</Text>
+        </Pressable>
+      </ScrollView>
+    )
+  }
+
   const nomeTipo = NOME_TIPO[processo.tipo] || processo.tipo
 
   // Só os documentos que o colaborador envia
   const docs = processo.documentos.filter(d => d.direcao === 'COLABORADOR_ENVIA')
+  const daEmpresa = processo.documentos.filter(d => d.direcao === 'EMPRESA_ENVIA' && d.status !== 'PENDENTE')
   const resolver = docs.filter(d => d.status === 'PENDENTE' || d.status === 'RECUSADO')
   const comRH = docs.filter(d => d.status === 'EM_ANALISE')
   const aprovados = docs.filter(d => d.status === 'APROVADO')
@@ -99,6 +156,42 @@ export default function TelaInicio({ irParaEnviar, irParaConvite, sair }) {
         </Text>
       </View>
 
+      {erroAceite !== '' && <Text style={styles.erro}>{erroAceite}</Text>}
+
+      {daEmpresa.length > 0 && (
+        <View>
+          <View style={styles.secaoCabecalho}>
+            <Text style={styles.secaoTitulo}>Documentos da empresa</Text>
+          </View>
+          <View style={styles.listaCard}>
+            {daEmpresa.map((d, i) => (
+              <View key={d.id} style={[styles.itemColuna, i > 0 && styles.itemLinha]}>
+                <Text style={styles.itemNome}>{d.nomeTipo}</Text>
+
+                <Pressable style={styles.botaoSecundario} onPress={() => verArquivo(d.idUltimoEnvio)}>
+                  <Text style={styles.botaoSecundarioTexto}>📄 Ver documento</Text>
+                </Pressable>
+
+                {d.status === 'EM_ANALISE' && (
+                  <Pressable
+                    style={[styles.botaoPequeno, aceitandoId !== null && styles.botaoDesativado]}
+                    onPress={() => aceitar(d.id)}
+                    disabled={aceitandoId !== null}
+                  >
+                    {aceitandoId === d.id
+                      ? <ActivityIndicator color="#fff" />
+                      : <Text style={styles.botaoPequenoTexto}>Li e dou o aceite</Text>}
+                  </Pressable>
+                )}
+
+                {d.status === 'ACEITO' && (
+                  <Text style={styles.itemOk}>✓ Você deu o aceite</Text>
+                )}
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
       {/* Seção: Para você resolver */}
       {resolver.length > 0 && (
         <View>

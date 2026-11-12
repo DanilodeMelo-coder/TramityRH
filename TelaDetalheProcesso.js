@@ -2,8 +2,9 @@ import {useState, useEffect} from 'react'
 import {View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, Alert, Linking, Platform} from 'react-native'
 import {styles} from './Styles'
 import Logo from './Logo'
-import {buscarProcesso, avaliarDocumento, baixarArquivoEnvio, concluirProcesso} from './processo'
+import {buscarProcesso, avaliarDocumento, baixarArquivoEnvio, concluirProcesso, enviarArquivoEmpresa} from './processo'
 import {CONFIG, obteerToken} from './config'
+import * as DocumentPicker from 'expo-document-picker'
 
 const NOME_TIPO = {ADMISSAO: 'Admissão', DEMISSAO: 'Demissão'}
 
@@ -57,6 +58,26 @@ export default function TelaDetalheProcesso({resumo, voltar}){
       setErroAcao('Não foi possível abrir o arquivo.')
     }
   }
+
+   async function enviarArquivoDaEmpresa(idDocumento){
+  setErroAcao('')
+  const resultado = await DocumentPicker.getDocumentAsync({
+    type: ['application/pdf', 'image/jpeg', 'image/png'],
+    copyToCacheDirectory: true,
+  })
+  if (resultado.canceled) return
+
+  setSalvandoId(idDocumento)
+  try{
+    await enviarArquivoEmpresa(resumo.id, idDocumento, resultado.assets[0])
+    setProcesso(await buscarProcesso(resumo.id))
+  }catch(e){
+    setErroAcao(e.message || 'Não foi possível enviar o arquivo.')
+  }finally{
+    setSalvandoId(null)
+  }
+}
+
    async function avaliar(idDocumento, resultado, motivoRecusa){
     setErroAcao('')
     setSalvandoId(idDocumento)
@@ -113,9 +134,12 @@ export default function TelaDetalheProcesso({resumo, voltar}){
 
   const nome = resumo.nomeColaborador || resumo.emailConvite
   const docs = processo ? processo.documentos : []
-  const analisar = docs.filter(d => d.status === 'EM_ANALISE')
-  const faltam = docs.filter(d => d.status === 'PENDENTE' || d.status === 'RECUSADO')
-  const aprovados = docs.filter(d => d.status === 'APROVADO')
+  const doColaborador = docs.filter(d => d.direcao === 'COLABORADOR_ENVIA')
+  const daEmpresa = docs.filter(d => d.direcao === 'EMPRESA_ENVIA')
+  const analisar = doColaborador.filter(d => d.status === 'EM_ANALISE')
+  const faltam = doColaborador.filter(d => d.status === 'PENDENTE' || d.status === 'RECUSADO')
+  const aprovados = doColaborador.filter(d => d.status === 'APROVADO')
+  const prontos = docs.filter(d => d.status === 'APROVADO' || d.status === 'ACEITO')
   const concluido = processo !== null && processo.status === 'CONCLUIDO'
   const ocupado = salvandoId !== null
 
@@ -134,11 +158,11 @@ export default function TelaDetalheProcesso({resumo, voltar}){
           <View>
             <View style={styles.progresso}>
               {docs.map((d, i) => (
-                <View key={d.id} style={[styles.segmento, i < aprovados.length && styles.segmentoCheio]} />
+                <View key={d.id} style={[styles.segmento, i < prontos.length && styles.segmentoCheio]} />
               ))}
             </View>
             <Text style={styles.blocoSubTitulo}>
-              {aprovados.length} de {docs.length} aprovados · {analisar.length} em análise
+              {prontos.length} de {docs.length} concluidos · {analisar.length} em análise
             </Text>
           </View>
         ) : (
@@ -266,6 +290,53 @@ export default function TelaDetalheProcesso({resumo, voltar}){
                   </View>
                 ) : (
                   <Text style={styles.itemSub}>Ainda não enviado</Text>
+                )}
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+            {/* Seção: Documentos da empresa (demissão) */}
+      {processo && daEmpresa.length > 0 && (
+        <View>
+          <View style={styles.secaoCabecalho}>
+            <Text style={styles.secaoTitulo}>Documentos da empresa</Text>
+          </View>
+          <View style={styles.listaCard}>
+            {daEmpresa.map((d, i) => (
+              <View key={d.id} style={[styles.itemColuna, i > 0 && styles.itemLinha]}>
+                <Text style={styles.itemNome}>{d.nomeTipo}</Text>
+                {d.descricao ? <Text style={styles.itemSub}>{d.descricao}</Text> : null}
+
+                {d.status === 'PENDENTE' && (
+                  <View>
+                    <Text style={styles.itemSub}>Você ainda não enviou este arquivo</Text>
+                    {!concluido && (
+                      <Pressable
+                        style={[styles.botaoPequeno, ocupado && styles.botaoDesativado]}
+                        onPress={() => enviarArquivoDaEmpresa(d.id)}
+                        disabled={ocupado}
+                      >
+                        {salvandoId === d.id
+                          ? <ActivityIndicator color="#fff" />
+                          : <Text style={styles.botaoPequenoTexto}>Enviar arquivo</Text>}
+                      </Pressable>
+                    )}
+                  </View>
+                )}
+
+                {d.status === 'EM_ANALISE' && (
+                  <View>
+                    <Text style={styles.itemAnalise}>Enviado, aguardando aceite do colaborador</Text>
+                    <Pressable style={styles.botaoSecundario} onPress={() => visualizarArquivo(d.idUltimoEnvio)}>
+                      <Text style={styles.botaoSecundarioTexto}>📄 Ver arquivo</Text>
+                    </Pressable>
+                  </View>
+                )}
+
+                {d.status === 'ACEITO' && (
+                  <Text style={styles.itemOk}>✓ Aceito pelo colaborador</Text>
                 )}
               </View>
             ))}

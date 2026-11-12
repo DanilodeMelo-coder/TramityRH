@@ -27,6 +27,7 @@ export default function TelaNovoProcesso({ voltar }) {
   const [erro, setErro] = useState('')
   const [processoCriado, setProcessoCriado] = useState(null) // evita abrir o processo duas vezes
   const [convite, setConvite] = useState(null) // { codigo, expiraEm }
+  const [daEmpresa, setDaEmpresa] = useState([])
 
   async function carregarCatalogo() {
     setCarregando(true)
@@ -50,6 +51,14 @@ export default function TelaNovoProcesso({ voltar }) {
       atuais.includes(id) ? atuais.filter(x => x !== id) : [...atuais, id]
     )
   }
+
+  function definirQuemEnvia(id, empresaEnvia) {
+  if (empresaEnvia) {
+    setDaEmpresa(atual => atual.includes(id) ? atual : [...atual, id])
+  } else {
+    setDaEmpresa(atual => atual.filter(x => x !== id))
+  }
+}
 
   async function abrirProcesso() {
     if (!tipo) {
@@ -77,7 +86,7 @@ export default function TelaNovoProcesso({ voltar }) {
           documentos: selecionados.map(id => ({
             idTipoDocumento: id,
             descricao: '',
-            direcao: 'COLABORADOR_ENVIA',
+            direcao: tipo === 'DEMISSAO' && daEmpresa.includes(id) ? 'EMPRESA_ENVIA' : 'COLABORADOR_ENVIA',
           })),
         })
         setProcessoCriado(processo)
@@ -174,23 +183,43 @@ export default function TelaNovoProcesso({ voltar }) {
 
           {!carregando && erroCatalogo === '' && (
             <View style={styles.listaCard}>
-              {catalogo.map((t, i) => {
+                {catalogo.map((t, i) => {
                 const marcado = selecionados.includes(t.id)
                 return (
-                  <Pressable
-                    key={t.id}
-                    style={[styles.item, i > 0 && styles.itemLinha]}
-                    onPress={() => alternar(t.id)}
-                    disabled={processoCriado !== null}
-                  >
-                    <View style={styles.itemTextos}>
-                      <Text style={styles.itemNome}>{t.nome}</Text>
-                      <Text style={styles.itemSub}>{t.categoria}</Text>
-                    </View>
-                    <View style={[styles.caixa, marcado && styles.caixaMarcada]}>
-                      {marcado && <Text style={styles.caixaCheck}>✓</Text>}
-                    </View>
-                  </Pressable>
+                  <View key={t.id}>
+                    <Pressable
+                      style={[styles.item, i > 0 && styles.itemLinha]}
+                      onPress={() => alternar(t.id)}
+                      disabled={processoCriado !== null}
+                    >
+                      <View style={styles.itemTextos}>
+                        <Text style={styles.itemNome}>{t.nome}</Text>
+                        <Text style={styles.itemSub}>{t.categoria}</Text>
+                      </View>
+                      <View style={[styles.caixa, marcado && styles.caixaMarcada]}>
+                        {marcado && <Text style={styles.caixaCheck}>✓</Text>}
+                      </View>
+                    </Pressable>
+
+                    {tipo === 'DEMISSAO' && marcado && (
+                      <View style={styles.opcoes}>
+                        <Pressable
+                          style={[styles.opcao, !daEmpresa.includes(t.id) && styles.opcaoAtiva]}
+                          onPress={() => definirQuemEnvia(t.id, false)}
+                          disabled={processoCriado !== null}
+                        >
+                          <Text style={[styles.opcaoTexto, !daEmpresa.includes(t.id) && styles.opcaoTextoAtivo]}>Colaborador envia</Text>
+                        </Pressable>
+                        <Pressable
+                          style={[styles.opcao, daEmpresa.includes(t.id) && styles.opcaoAtiva]}
+                          onPress={() => definirQuemEnvia(t.id, true)}
+                          disabled={processoCriado !== null}
+                        >
+                          <Text style={[styles.opcaoTexto, daEmpresa.includes(t.id) && styles.opcaoTextoAtivo]}>Empresa envia</Text>
+                        </Pressable>
+                      </View>
+                    )}
+                  </View>
                 )
               })}
             </View>

@@ -55,3 +55,21 @@ export async function enviarDocumento(idDocumento, arquivo) {
   }
   return resposta.json();
 }
+
+// Rota 18: POST /processos/{idProcesso}/documentos/{idDocumento}/aceite (colaborador dá o aceite)
+export async function darAceite(idProcesso, idDocumento) {
+  const token = await obteerToken();
+
+  const resposta = await fetch(
+    `${CONFIG.API_URL}/processos/${idProcesso}/documentos/${idDocumento}/aceite`,
+    {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+    }
+  );
+
+  if (!resposta.ok) {
+    throw await erroDaResposta(resposta, 'Não foi possível registrar o aceite.');
+  }
+  return resposta.json();
+}

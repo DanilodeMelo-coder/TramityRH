@@ -12,7 +12,7 @@ function formatarData(iso) {
   return iso.slice(0, 10).split('-').reverse().join('/')
 }
 
-export default function TelaListaProcessos({ irParaDetalhe, irParaNovoProcesso }) {
+export default function TelaListaProcessos({ irParaDetalhe, irParaNovoProcesso, sair }) {
 
   const [processos, setProcessos] = useState([])
   const [carregando, setCarregando] = useState(true)
@@ -140,6 +140,9 @@ export default function TelaListaProcessos({ irParaDetalhe, irParaNovoProcesso }
           </View>
         </Pressable>
       ))}
+      <Pressable onPress={sair}>
+        <Text style={styles.linkVoltar}>Sair</Text>
+      </Pressable>
     </ScrollView>
   )
 }
