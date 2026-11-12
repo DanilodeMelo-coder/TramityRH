@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CONFIG, criarErroHttp } from './config';
+import { CONFIG, criarErroHttp, obteerToken, erroDaResposta } from './config';
 
 // Rota 1: POST /auth/login (Autenticação do utilizador)
 export async function realizarLogin(email, senha) {
@@ -58,4 +58,22 @@ export async function realizarCadastro(dadosUsuario) {
   }
 
   return resposta.json();
+}
+
+// Rota 15: POST /convites/aceitar (liga o colaborador ao processo)
+export async function aceitarConvite(codigo) {
+  const token = await obteerToken();
+  const resposta = await fetch(`${CONFIG.API_URL}/convites/aceitar`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ codigo }),
+  });
+
+  if (!resposta.ok) {
+    throw await erroDaResposta(resposta, 'Não foi possível validar o código.');
+  }
+  return resposta.json(); // { idProcesso }
 }

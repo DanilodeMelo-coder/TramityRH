@@ -1,8 +1,8 @@
 import {useState, useEffect} from 'react'
-import {View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, Alert, Linking} from 'react-native'
+import {View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, Alert, Linking, Platform} from 'react-native'
 import {styles} from './Styles'
 import Logo from './Logo'
-import {buscarProcesso, avaliarDocumento} from './processo'
+import {buscarProcesso, avaliarDocumento, baixarArquivoEnvio, concluirProcesso} from './processo'
 import {CONFIG, obteerToken} from './config'
 
 const NOME_TIPO = {ADMISSAO: 'Admissão', DEMISSAO: 'Demissão'}
@@ -15,7 +15,9 @@ export default function TelaDetalheProcesso({resumo, voltar}){
   const [salvandoId, setSalvandoId] = useState(null)
   const [recusandoId, setRecusandoId] = useState(null)
   const [motivo, setMotivo] = useState('')
-
+  const [concluindo, setConcluindo] = useState(false)
+  const [avisoPendencias, setAvisoPendencias] = useState('')
+  
   async function carregar(){
     setCarregando(true)
     setErro('')
@@ -33,34 +35,33 @@ export default function TelaDetalheProcesso({resumo, voltar}){
   }, [])
 
   // Função real para visualizar/descarregar o documento enviado (Rota 11 conectada à API)
-  async function visualizarArquivo(idUltimoEnvio, nomeDocumento) {
+    async function visualizarArquivo(idUltimoEnvio) {
+    setErroAcao('')
+
     if (!idUltimoEnvio) {
-      Alert.alert('Aviso', 'Nenhum arquivo enviado para este documento.')
+      setErroAcao('Nenhum arquivo enviado para este documento.')
+      return
+    }
+    if (Platform.OS !== 'web') {
+      setErroAcao('Por enquanto, os arquivos só abrem na versão web.')
       return
     }
 
+    // Abre a aba já no clique, senão o navegador bloqueia como pop-up
+    const janela = window.open('', '_blank')
     try {
-      const token = await obteerToken()
-      // Monta a URL do endpoint de download/visualização do ficheiro na API do Railway
-      const urlArquivo = `${CONFIG.API_URL}/envios/${idUltimoEnvio}/arquivo`
-
-      // Abre o link diretamente no browser ou leitor de PDF do telemóvel, injetando o token se suportado ou abrindo a URL protegida
-      const suportado = await Linking.canOpenURL(urlArquivo)
-      if (suportado) {
-        await Linking.openURL(urlArquivo)
-      } else {
-        Alert.alert('Erro', 'Não foi possível abrir o link do arquivo.')
-      }
+      const arquivo = await baixarArquivoEnvio(idUltimoEnvio)
+      janela.location.href = URL.createObjectURL(arquivo)
     } catch (e) {
-      Alert.alert('Erro', 'Falha ao aceder ao documento.')
+      janela.close()
+      setErroAcao('Não foi possível abrir o arquivo.')
     }
   }
-
-  async function avaliar(idDocumento, resultado, motivoRecusa){
+   async function avaliar(idDocumento, resultado, motivoRecusa){
     setErroAcao('')
     setSalvandoId(idDocumento)
     try{
-      await avaliarDocumento(idDocumento, {resultado, motivoRecusa})
+      await avaliarDocumento(resumo.id, idDocumento, {resultado, motivoRecusa})
       setRecusandoId(null)
       setMotivo('')
       setProcesso(await buscarProcesso(resumo.id))
@@ -89,6 +90,25 @@ export default function TelaDetalheProcesso({resumo, voltar}){
     setRecusandoId(null)
     setMotivo('')
     setErroAcao('')
+  }
+
+    async function concluir(confirmar){
+    setErroAcao('')
+    setConcluindo(true)
+    try{
+      setProcesso(await concluirProcesso(resumo.id, confirmar))
+      setAvisoPendencias('')
+    }catch(e){
+      if(e.status === 409 && !confirmar && e.message.startsWith('Há documentos pendentes')){
+        // A API pede confirmação: mostra a lista e os botões
+        setAvisoPendencias(e.message)
+      }else{
+        setAvisoPendencias('')
+        setErroAcao(e.message)
+      }
+    }finally{
+      setConcluindo(false)
+    }
   }
 
   const nome = resumo.nomeColaborador || resumo.emailConvite
@@ -275,6 +295,38 @@ export default function TelaDetalheProcesso({resumo, voltar}){
               </View>
             ))}
           </View>
+        </View>
+      )}
+
+            {processo && !concluido && (
+        <View>
+          {avisoPendencias !== '' ? (
+            <View>
+              <Text style={styles.erro}>{avisoPendencias}</Text>
+              <Pressable
+                style={[styles.botao, concluindo && styles.botaoDesativado]}
+                onPress={() => concluir(true)}
+                disabled={concluindo}
+              >
+                {concluindo
+                  ? <ActivityIndicator color="#fff" />
+                  : <Text style={styles.botaoTexto}>Concluir mesmo assim</Text>}
+              </Pressable>
+              <Pressable onPress={() => setAvisoPendencias('')} disabled={concluindo}>
+                <Text style={styles.linkVoltar}>Cancelar</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable
+              style={[styles.botao, (concluindo || ocupado) && styles.botaoDesativado]}
+              onPress={() => concluir(false)}
+              disabled={concluindo || ocupado}
+            >
+              {concluindo
+                ? <ActivityIndicator color="#fff" />
+                : <Text style={styles.botaoTexto}>Concluir processo</Text>}
+            </Pressable>
+          )}
         </View>
       )}
 

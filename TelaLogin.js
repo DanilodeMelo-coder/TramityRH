@@ -1,25 +1,38 @@
 import {useState} from 'react'
-import {View, Text, TextInput, Pressable, Alert} from 'react-native'
+import {View, Text, TextInput, Pressable, ActivityIndicator} from 'react-native'
 import {styles} from './Styles'
 import Logo from './Logo'
+import {realizarLogin} from './auth'
 
 
-export default function TelaLogin({irParaRecuperar, irParaCadastro}){
+export default function TelaLogin({irParaRecuperar, irParaCadastro, aoEntrar}){
 
-    const[usuario, setUsuario] = useState('')
-    const[senha, setSenha] = useState('')
-    const[mostrarSenha, setMostrarSenha] = useState(false)
+    const [usuario, setUsuario] = useState('')
+    const [senha, setSenha] = useState('')
+    const [mostrarSenha, setMostrarSenha] = useState(false)
+    const [entrando, setEntrando] = useState(false)
+    const [erro, setErro] = useState('')
 
-    function entrar(){
-      if(!usuario || !senha){
-        Alert.alert('Atenção', 'Preencha o e-mail/CPF e a senha.')
+    async function entrar(){
+      if(!usuario.trim() || !senha){
+        setErro('Preencha o e-mail e a senha.')
         return
       }
-      Alert.alert('Login', 'Login realizado com sucesso!')
-    }
 
-    function esqueciSenha(){
-      Alert.alert('Recuperação de acesso', 'Tela de recuperação de senha.')
+      setErro('')
+      setEntrando(true)
+      try{
+        const dados = await realizarLogin(usuario.trim(), senha)
+        aoEntrar(dados.perfil)
+      }catch(e){
+        if(e.status === 401){
+          setErro('E-mail ou senha incorretos.')
+        }else{
+          setErro('Não foi possível entrar. Tente de novo.')
+        }
+      }finally{
+        setEntrando(false)
+      }
     }
 
   return(
@@ -33,12 +46,12 @@ export default function TelaLogin({irParaRecuperar, irParaCadastro}){
         </View> 
 
         <View style={styles.campo}>
-          <Text style={styles.label}>E-mail ou CPF</Text>
+          <Text style={styles.label}>E-mail</Text>
           <TextInput
             style={styles.input}
             value={usuario}
             onChangeText={setUsuario}
-            placeholder='Digite seu e-mail ou CPF'
+            placeholder='Digite seu e-mail'
             placeholderTextColor="#6b756f"
             autoCapitalize='none'
             keyboardType='email-address'
@@ -66,9 +79,15 @@ export default function TelaLogin({irParaRecuperar, irParaCadastro}){
           <Text style={styles.linkEsqueci}>Esqueci minha senha</Text>
         </Pressable>
 
-        <Pressable style={styles.botao} onPress={entrar}>
-          <Text style={styles.botaoTexto}>ENTRAR</Text>
+        <Pressable
+          style={[styles.botao, entrando && styles.botaoDesativado]}
+          onPress={entrar}
+          disabled={entrando}
+        >
+          {entrando ? <ActivityIndicator color="#fff" /> : <Text style={styles.botaoTexto}>ENTRAR</Text>}
         </Pressable>
+
+        {erro !== '' && <Text style={styles.erro}>{erro}</Text>}
 
         <View style={styles.rodapeConvite}>
           <Text style={styles.rodapeTexto}>Recebeu um convite?</Text>

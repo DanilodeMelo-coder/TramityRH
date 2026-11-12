@@ -93,21 +93,56 @@ export async function gerarConvite(idProcesso, email) {
   return resposta.json();
 }
 
-// Rota 12: POST /documentos/{id}/avaliacao (Aprova ou recusa um documento)
-export async function avaliarDocumento(idDocumento, { resultado, motivoRecusa }) {
+// Rota 11: GET /envios/{id}/arquivo (baixa o arquivo enviado)
+export async function baixarArquivoEnvio(idEnvio) {
   const token = await obteerToken();
-  const resposta = await fetch(`${CONFIG.API_URL}/documentos/${idDocumento}/avaliacao`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ resultado, motivoRecusa }),
+  const resposta = await fetch(`${CONFIG.API_URL}/envios/${idEnvio}/arquivo`, {
+    headers: { 'Authorization': `Bearer ${token}` },
   });
+
+  if (!resposta.ok) {
+    throw criarErroHttp(resposta.status, 'Não foi possível abrir o arquivo.');
+  }
+
+  return resposta.blob();
+}
+
+// Rota 12: PUT /processos/{idProcesso}/documentos/{idDocumento}/avaliacao
+export async function avaliarDocumento(idProcesso, idDocumento, { resultado, motivoRecusa }) {
+  const token = await obteerToken();
+  const resposta = await fetch(
+    `${CONFIG.API_URL}/processos/${idProcesso}/documentos/${idDocumento}/avaliacao`,
+    {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ resultado, motivo: motivoRecusa }),
+    }
+  );
 
   if (!resposta.ok) {
     throw criarErroHttp(resposta.status, 'Não foi possível avaliar o documento.');
   }
 
+  return resposta.json();
+}
+
+// Rota 14: POST /processos/{id}/concluir
+export async function concluirProcesso(idProcesso, confirmarPendencias) {
+  const token = await obteerToken();
+  const resposta = await fetch(`${CONFIG.API_URL}/processos/${idProcesso}/concluir`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ confirmarPendencias }),
+  });
+
+  if (!resposta.ok) {
+    throw await erroDaResposta(resposta, 'Não foi possível concluir o processo.');
+  }
   return resposta.json();
 }

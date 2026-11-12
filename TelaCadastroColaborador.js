@@ -2,7 +2,7 @@ import {useState} from 'react'
 import {View, Text, TextInput, Pressable, ScrollView, ActivityIndicator} from 'react-native'
 import {styles} from './Styles'
 import Logo from './Logo'
-import {cadastrarColaborador} from './auth'
+import {realizarCadastro} from './auth'
 
 // Coloca a máscara 000.000.000-00 enquanto a pessoa digita
 function formatarCpf(texto){
@@ -48,7 +48,7 @@ export default function TelaCadastro({voltarParaLogin}){
     setEnviando(true)
     try{
       // A API recebe o CPF só com números
-      await cadastrarColaborador({
+      await realizarCadastro({
         nome: nome.trim(),
         cpf: cpf.replace(/\D/g, ''),
         email: email.trim(),

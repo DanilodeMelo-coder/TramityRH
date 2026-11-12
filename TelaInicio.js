@@ -1,8 +1,69 @@
-import { View, Text, Pressable, ScrollView } from 'react-native'
+import { useState, useEffect } from 'react'
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native'
 import { styles } from './Styles'
 import Logo from './Logo'
+import { listarMeusProcessos, buscarProcessoColaborador } from './documentos'
 
-export default function TelaInicio({ processo, irParaEnviar }) {
+const NOME_TIPO = { ADMISSAO: 'Admissão', DEMISSAO: 'Demissão' }
+
+export default function TelaInicio({ irParaEnviar, irParaConvite, sair }) {
+  const [processo, setProcesso] = useState(null)
+  const [empresa, setEmpresa] = useState('')
+  const [carregando, setCarregando] = useState(true)
+  const [erro, setErro] = useState('')
+
+  async function carregar() {
+    setCarregando(true)
+    setErro('')
+    try {
+      const meus = await listarMeusProcessos()
+
+      // Conta nova, sem processo: vai informar o código do convite
+      if (meus.length === 0) {
+        irParaConvite()
+        return
+      }
+
+      const atual = meus.find(p => p.status === 'EM_ANDAMENTO') || meus[0]
+      setEmpresa(atual.empresa)
+      setProcesso(await buscarProcessoColaborador(atual.id))
+    } catch (e) {
+      setErro(e.message || 'Não foi possível carregar seu processo.')
+    } finally {
+      setCarregando(false)
+    }
+  }
+
+  useEffect(() => {
+    carregar()
+  }, [])
+
+  if (carregando) {
+    return (
+      <View style={styles.fundo}>
+        <Logo />
+        <ActivityIndicator color="#0e6b4b" style={styles.carregando} />
+      </View>
+    )
+  }
+
+  if (erro !== '' || !processo) {
+    return (
+      <View style={styles.fundo}>
+        <Logo />
+        <Text style={styles.erro}>{erro}</Text>
+        <Pressable onPress={carregar}>
+          <Text style={styles.linkVoltar}>Tentar de novo</Text>
+        </Pressable>
+        <Pressable onPress={sair}>
+          <Text style={styles.linkVoltar}>Sair</Text>
+        </Pressable>
+      </View>
+    )
+  }
+
+  const nomeTipo = NOME_TIPO[processo.tipo] || processo.tipo
+
   // Só os documentos que o colaborador envia
   const docs = processo.documentos.filter(d => d.direcao === 'COLABORADOR_ENVIA')
   const resolver = docs.filter(d => d.status === 'PENDENTE' || d.status === 'RECUSADO')
@@ -13,15 +74,15 @@ export default function TelaInicio({ processo, irParaEnviar }) {
   return (
     <ScrollView style={styles.fundoTela} contentContainerStyle={styles.scrollConteudo}>
       <Logo />
-      
+
       {/* Bloco principal verde com progresso e contagem */}
       <View style={styles.bloco}>
-        <Text style={styles.blocoTopo}>{processo.tipo} · {processo.nomeEmpresa || 'Empresa'}</Text>
+        <Text style={styles.blocoTopo}>{nomeTipo} · {empresa}</Text>
         {faltam > 0 ? (
           <Text style={styles.blocoTitulo}>
             {faltam === 1 ? 'Falta ' : 'Faltam '}
             <Text style={styles.destaque}> {faltam} {faltam === 1 ? 'documento' : 'documentos'} </Text>
-            {' '}para concluir sua {processo.tipo.toLowerCase()}
+            {' '}para concluir sua {nomeTipo.toLowerCase()}
           </Text>
         ) : (
           <Text style={styles.blocoTitulo}>
@@ -108,6 +169,10 @@ export default function TelaInicio({ processo, irParaEnviar }) {
           </View>
         </View>
       )}
+
+      <Pressable onPress={sair}>
+        <Text style={styles.linkVoltar}>Sair</Text>
+      </Pressable>
     </ScrollView>
   )
 }

@@ -8,29 +8,24 @@ import TelaListaProcessos from './TelaListaProcessos'
 import TelaDetalheProcesso from './TelaDetalheProcesso'
 import TelaNovoProcesso from './TelaNovoProcesso'
 import TelaConvite from './TelaConvite'
-import { processoSimulado } from './documentos'
+import { realizarLogout } from './auth'
 import { useState } from 'react'
 
 export default function App(){
-  const [tela, setTela] = useState('login') // Definido para 'login' para iniciar na tela de login
-  const [processo, setProcesso] = useState(processoSimulado)
+  const [tela, setTela] = useState('login')
   const [documentoAtual, setDocumentoAtual] = useState(null)
   const [resumoAtual, setResumoAtual] = useState(null)
 
-  // Depois do envio, o documento passa para EM_ANALISE (RN10)
-  function marcarEnviado(idDocumento){
-    setProcesso({
-      ...processo,
-      documentos: processo.documentos.map(d =>
-        d.id === idDocumento ? {...d, status: 'EM_ANALISE', motivoRecusa: null} : d
-      ),
-    })
+  async function sair(){
+    await realizarLogout()
+    setTela('login')
   }
 
   if(tela === 'login'){
     return <TelaLogin
       irParaRecuperar={() => setTela('recuperar')}
       irParaCadastro={() => setTela('cadastro')}
+      aoEntrar={(perfil) => setTela(perfil === 'RH' ? 'processosRH' : 'inicio')}
     />
   }
   if(tela === 'cadastro'){
@@ -41,24 +36,24 @@ export default function App(){
   }
   if(tela === 'convite'){
     return <TelaConvite
-      voltar={() => setTela('login')}
-      irParaInicio={() => setTela('inicio')}
+      voltar={sair}
+      aoAceitar={() => setTela('inicio')}
     />
   }
   if(tela === 'inicio'){
     return <TelaInicio
-      processo={processo}
       irParaEnviar={(documento) => {
         setDocumentoAtual(documento)
         setTela('enviar')
       }}
+      irParaConvite={() => setTela('convite')}
+      sair={sair}
     />
   }
   if(tela === 'enviar'){
     return <TelaEnviarDocumento
       documento={documentoAtual}
       voltar={() => setTela('inicio')}
-      aoEnviar={marcarEnviado}
     />
   }
   if(tela === 'processosRH'){

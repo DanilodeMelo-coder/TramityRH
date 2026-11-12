@@ -17,3 +17,17 @@ export function criarErroHttp(status, mensagem) {
   erro.status = status;
   return erro;
 }
+
+// Monta o erro com a mensagem { erro } que a API manda, quando existir
+export async function erroDaResposta(resposta, mensagemPadrao) {
+  let mensagem = mensagemPadrao;
+  try {
+    const corpo = await resposta.json();
+    if (corpo && corpo.erro) {
+      mensagem = corpo.erro;
+    }
+  } catch (e) {
+    // Corpo vazio ou que não é JSON: fica a mensagem padrão
+  }
+  return criarErroHttp(resposta.status, mensagem);
+}
